@@ -178,6 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div id="peramaga-fields" class="row mb-3" style="display: none;">
+
                                 <div class="col">
                                     <label for="child_name" class="form-label">Child Name *</label>
                                     <input type="text" class="form-control" id="child_name" name="child_name">
