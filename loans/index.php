@@ -12,10 +12,10 @@ $offset = ($page - 1) * $perPage;
 
 // Build the base query and count query
 // Using 'tech' instead of 'to' as the alias
-$query = "SELECT * FROM loans l
-          JOIN farmers f ON l.farmer_id = f.id
-          JOIN loantypes lt ON l.ltid = lt.id
-          WHERE 1=1";
+$loans = $pdo->query("SELECT l.*, f.name AS farmer_name, f.id AS farmer_id, f.farmer_code AS farmer_code, lt.name AS loan_type_name, lt.interest AS loan_type_interest FROM loans l
+          JOIN farmers f ON l.fid = f.id
+          JOIN loantype lt ON l.ltid = lt.id
+          WHERE is_paid = 0")->fetchAll(PDO::FETCH_ASSOC);
 
 // Apply filters
 $params = [];
@@ -71,7 +71,7 @@ $countParams = [];
 
                 <div class="card shadow-sm mb-4">
                     <div class="card-body">
-                        <?php if (empty($issuances)): ?>
+                        <?php if (empty($loans)): ?>
                             <div class="alert alert-info">
                                 No issuances found matching your criteria.
                             </div>
@@ -90,23 +90,23 @@ $countParams = [];
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($issuances as $issuance): ?>
+                                        <?php foreach ($loans as $loan): ?>
                                             <tr>
-                                                <td><?php echo htmlspecialchars($issuance['loan_type']); ?></td>
-                                                <td><?php echo htmlspecialchars($issuance['farmer_name']); ?></td>
-                                                <td><?php echo htmlspecialchars($issuance['farmer_code']); ?></td>
-                                                <td><?php echo date('M d, Y', strtotime($issuance['issue_date'])); ?></td>
-                                                <td><?php echo htmlspecialchars($issuance['amount']); ?></td>
-                                                <td><?php echo htmlspecialchars($issuance['repayment']); ?></td>
+                                                <td><?php echo htmlspecialchars($loan['loan_type_name']); ?></td>
+                                                <td><?php echo htmlspecialchars($loan['farmer_name']); ?></td>
+                                                <td><?php echo htmlspecialchars($loan['farmer_code']); ?></td>
+                                                <td><?php echo date('M d, Y', strtotime($loan['issue_date'])); ?></td>
+                                                <td>Rs. <?php echo htmlspecialchars($loan['price']); ?></td>
+                                                <td>Rs. <?php echo htmlspecialchars($loan['need_to_pay']); ?></td>
                                                 <td>
-                                                    <?php if ($issuance['pending_items'] > 0): ?>
-                                                        <span class="badge bg-warning text-dark">Pending (<?php echo $issuance['pending_items']; ?>)</span>
+                                                    <?php if ($loan['is_paid'] == 0): ?>
+                                                        <span class="badge bg-warning text-dark">Pending</span>
                                                     <?php else: ?>
                                                         <span class="badge bg-success">Completed</span>
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
-                                                    <a href="view.php?id=<?php echo $issuance['id']; ?>" class="btn btn-sm btn-outline-primary">
+                                                    <a href="view.php?id=<?php echo $loan['id']; ?>" class="btn btn-sm btn-outline-primary">
                                                         <i class="bi bi-eye"></i> View
                                                     </a>
                                                 </td>
@@ -116,44 +116,7 @@ $countParams = [];
                                 </table>
                             </div>
 
-                            <!-- Pagination -->
-                            <nav aria-label="Page navigation">
-                                <ul class="pagination justify-content-center">
-                                    <?php if ($page > 1): ?>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => 1])); ?>">
-                                                <i class="bi bi-chevron-double-left"></i>
-                                            </a>
-                                        </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page - 1])); ?>">
-                                                <i class="bi bi-chevron-left"></i>
-                                            </a>
-                                        </li>
-                                    <?php endif; ?>
 
-                                    <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
-                                        <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
-                                            <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $i])); ?>">
-                                                <?php echo $i; ?>
-                                            </a>
-                                        </li>
-                                    <?php endfor; ?>
-
-                                    <?php if ($page < $totalPages): ?>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page + 1])); ?>">
-                                                <i class="bi bi-chevron-right"></i>
-                                            </a>
-                                        </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $totalPages])); ?>">
-                                                <i class="bi bi-chevron-double-right"></i>
-                                            </a>
-                                        </li>
-                                    <?php endif; ?>
-                                </ul>
-                            </nav>
                         <?php endif; ?>
                     </div>
                 </div>
