@@ -97,7 +97,18 @@ if (!$deposits || count($deposits) === 0) {
 
                                     <dt class="col-sm-4 mb-4">farmer_name</dt>
                                     <dd class="col-sm-8 mb-4"><?php echo htmlspecialchars($farmers['name'] ?? 'N/A'); ?></dd>
-
+                                    <?php if ($depositTypeId == 6): ?>
+                                        <?php foreach ($deposits as $deposit): ?>
+                                            <dt class="col-sm-4 mb-4">Child Name</dt>
+                                            <dd class="col-sm-8 mb-4">
+                                                <?php echo htmlspecialchars($deposit['childname'] ?? 'N/A'); ?>
+                                            </dd>
+                                            <dt class="col-sm-4 mb-4">Date of Birth</dt>
+                                            <dd class="col-sm-8 mb-4">
+                                                <?php echo htmlspecialchars($deposit['dob'] ?? 'N/A'); ?>
+                                            </dd>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                     <dt class="col-sm-4 mb-4">Balance</dt>
                                     <dd class="col-sm-8 mb-4 fw-bold">Rs. <?php echo $balance['balance']; ?></dd>
                                 </dl>
@@ -117,7 +128,7 @@ if (!$deposits || count($deposits) === 0) {
                                     <p class="text-muted">No recent issuances</p>
                                 <?php else: ?>
                                     <div class="table-responsive">
-                                        <table class="table table-sm">
+                                        <table class="table">
                                             <thead>
                                                 <tr>
                                                     <th>Date</th>

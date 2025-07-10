@@ -67,8 +67,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $balance = $amount;
             }
 
-            $stmt = $pdo->prepare("INSERT INTO deposits (fid, dtid, amount, dorw, balance, date) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$farmer, $deposit_type, $amount, $deposit_or_withdraw, $balance, $transaction_date]);
+            if ($deposit_type == 6) {
+                $child_name = trim($_POST['child_name']);
+                $child_dob = trim($_POST['child_dob']);
+
+                if (empty($child_name)) {
+                    $errors['child_name'] = "Child name is required.";
+                }
+
+                if (empty($child_dob)) {
+                    $errors['child_dob'] = "Child date of birth is required.";
+                }
+
+                if (!empty($errors)) {
+                    throw new Exception("Validation errors occurred.");
+                }
+
+                // Insert into peramaga table
+                $stmt = $pdo->prepare("INSERT INTO deposits (fid, dtid, amount, dorw, balance, childname, dob, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$farmer, $deposit_type, $amount, $deposit_or_withdraw, $balance, $child_name, $child_dob, $transaction_date]);
+            } else {
+                $stmt = $pdo->prepare("INSERT INTO deposits (fid, dtid, amount, dorw, balance, date) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$farmer, $deposit_type, $amount, $deposit_or_withdraw, $balance, $transaction_date]);
+            }
+
 
             if ($deposit_or_withdraw == 'd') {
                 header("Location: index.php?success=Deposit successfully");
@@ -154,6 +176,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <?php endif; ?>
                                 </div>
                             </div>
+
+                            <div id="peramaga-fields" class="row mb-3" style="display: none;">
+                                <div class="col">
+                                    <label for="child_name" class="form-label">Child Name *</label>
+                                    <input type="text" class="form-control" id="child_name" name="child_name">
+                                </div>
+                                <div class="col">
+                                    <label for="child_dob" class="form-label">Child Date of Birth *</label>
+                                    <input type="date" class="form-control" id="child_dob" name="child_dob">
+                                </div>
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const depositTypeSelect = document.getElementById('deposit_type');
+                                    const peramagaFields = document.getElementById('peramaga-fields');
+                                    // Find the peramaga id
+                                    let peramagaId = '';
+                                    <?php foreach ($deposittypes as $deposittype): ?>
+                                        <?php if (strtolower($deposittype['name']) === 'peramaga'): ?>
+                                            peramagaId = '<?php echo $deposittype['id']; ?>';
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+
+                                    function togglePeramagaFields() {
+                                        if (depositTypeSelect.value === peramagaId) {
+                                            peramagaFields.style.display = '';
+                                        } else {
+                                            peramagaFields.style.display = 'none';
+                                        }
+                                    }
+                                    depositTypeSelect.addEventListener('change', togglePeramagaFields);
+                                    togglePeramagaFields();
+                                });
+                            </script>
 
                             <div class="row mb-3">
                                 <div class="col">
