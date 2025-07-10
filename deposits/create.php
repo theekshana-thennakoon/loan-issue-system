@@ -22,11 +22,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['description'] = 'Description must be less than 255 characters';
     }
 
-    if (empty($_POST['min_no_percentage'])) {
-        $errors['min_no_percentage'] = 'Minimum number of percentage to get loan is required';
-    } elseif (!is_numeric($_POST['min_no_percentage']) || $_POST['min_no_percentage'] < 0) {
-        $errors['min_no_percentage'] = 'Minimum number of percentage must be a positive number';
-    }
 
     if (empty($_POST['interest_rate'])) {
         $errors['interest_rate'] = 'Interest rate is required';
@@ -34,15 +29,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['interest_rate'] = 'Interest rate must be a positive number';
     }
 
-    if (empty($_POST['can_withdraw'])) {
+    if (!isset($_POST['can_withdraw']) || $_POST['can_withdraw'] === '') {
         $errors['can_withdraw'] = 'Can withdraw is required';
     }
 
-    if (empty($_POST['assets_or_responsibility'])) {
+    if (!isset($_POST['assets_or_responsibility']) || $_POST['assets_or_responsibility'] === '') {
         $errors['assets_or_responsibility'] = 'Assets or responsibility is required';
     } elseif (!in_array($_POST['assets_or_responsibility'], ['1', '0'])) {
         $errors['assets_or_responsibility'] = 'Invalid selection for assets or responsibility';
     }
+
 
     if (empty($errors)) {
         try {

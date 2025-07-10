@@ -53,11 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['interest_rate'] = 'Interest rate is required and must be a number';
     }
 
-    if (empty($can_withdraw)) {
+    if (!isset($can_withdraw) || $can_withdraw === '') {
         $errors['can_withdraw'] = 'Please select if can withdraw';
     }
 
-    if (empty($assets_or_responsibility)) {
+    if (!isset($assets_or_responsibility) || $assets_or_responsibility === '') {
         $errors['assets_or_responsibility'] = 'Please select if it is an asset or responsibility';
     }
 

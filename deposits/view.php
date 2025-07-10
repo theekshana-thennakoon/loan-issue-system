@@ -98,9 +98,7 @@ $no_of_accounts = $stmt->fetchColumn();
                                     <dt class="col-sm-4 mb-4">Assets or Responsibility</dt>
                                     <dd class="col-sm-8 mb-4">
                                         <?php
-                                        if (empty($deposittype['asset_or_respon'])) {
-                                            echo 'N/A';
-                                        } elseif ($deposittype['asset_or_respon'] == '1') {
+                                        if ($deposittype['asset_or_respon'] == '1') {
                                             echo 'Asset';
                                         } elseif ($deposittype['asset_or_respon'] == '0') {
                                             echo 'Responsibility';
@@ -113,9 +111,7 @@ $no_of_accounts = $stmt->fetchColumn();
                                     <dt class="col-sm-4 mb-4">Can withdraw</dt>
                                     <dd class="col-sm-8 mb-4">
                                         <?php
-                                        if (empty($deposittype['can_withdraw'])) {
-                                            echo 'N/A';
-                                        } elseif ($deposittype['can_withdraw'] == '1') {
+                                        if ($deposittype['can_withdraw'] == '1') {
                                             echo 'Yes';
                                         } elseif ($deposittype['can_withdraw'] == '0') {
                                             echo 'No';
