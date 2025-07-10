@@ -132,7 +132,7 @@ if (!$deposits || count($deposits) === 0) {
                                             <thead>
                                                 <tr>
                                                     <th>Date</th>
-                                                    <th>Deposit/Withdrawal</th>
+                                                    <th>Status</th>
                                                     <th>Amount</th>
                                                     <th>Balance</th>
                                                 </tr>
