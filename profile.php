@@ -8,7 +8,7 @@ $name = $_SESSION['technical_officer_name'];
 $status = $_SESSION['technical_officer_status'];
 
 // Fetch user data from database
-$stmt = $pdo->prepare('SELECT * FROM technical_officers WHERE id = ?');
+$stmt = $pdo->prepare('SELECT * FROM users WHERE id = ?');
 $stmt->execute([$id]);
 $user = $stmt->fetch();
 
@@ -74,7 +74,7 @@ if (!$user) {
 </head>
 
 
-<?php include './includes/header.php'; ?>
+<?php include './includes/header2.php'; ?>
 <div class="container profile-container">
 
 
