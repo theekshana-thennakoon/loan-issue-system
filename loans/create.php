@@ -8,6 +8,12 @@ redirectIfNotLoggedIn();
 $loanTypes = $pdo->query("SELECT id, name, interest FROM loantype")->fetchAll(PDO::FETCH_ASSOC);
 $farmers = $pdo->query("SELECT * FROM farmers")->fetchAll(PDO::FETCH_ASSOC);
 
+$normalDeposits = $pdo->query("SELECT * FROM deposittypes WHERE id = 2")->fetchAll(PDO::FETCH_ASSOC);
+$shareDeposits = $pdo->query("SELECT * FROM deposittypes WHERE id = 3")->fetchAll(PDO::FETCH_ASSOC);
+$normalInterest = $normalDeposits[0]['no_of_presentage_to_get_loan'] ?? 0; // Assuming interest is stored in the first row
+$shareInterest = $shareDeposits[0]['no_of_presentage_to_get_loan'] ?? 0; // Assuming interest is stored in the first row
+
+
 $errors = [];
 $farmerId = $loanTypeId = $reason = '';
 $issueDate = date('Y-m-d');
@@ -39,6 +45,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($amount <= 0) {
         $errors['amount'] = 'Amount must be greater than 0';
+    }
+    $normalamountResult = $pdo->query("SELECT balance FROM deposits WHERE id = 
+    (SELECT MAX(id) FROM deposits WHERE fid = $farmerId AND dtid = 2)")->fetchAll(PDO::FETCH_ASSOC);
+    $normalamount = (isset($normalamountResult[0]['balance'])) ? (float)$normalamountResult[0]['balance'] : 0;
+
+    $shareamountResult = $pdo->query("SELECT balance FROM deposits WHERE id = 
+    (SELECT MAX(id) FROM deposits WHERE fid = $farmerId AND dtid = 3)")->fetchAll(PDO::FETCH_ASSOC);
+    $shareamount = (isset($shareamountResult[0]['balance'])) ? (float)$shareamountResult[0]['balance'] : 0;
+
+    if ($normalamount < ($amount * $normalInterest / 100) / 2) {
+        $errors['normal_amount'] = 'You must have at least ' . $normalInterest . '% of the amount in normal savings to issue a loan';
+    }
+
+    if ($shareamount < ($amount * $shareInterest / 100) / 2) {
+        $errors['share_amount'] = 'You must have at least ' . $shareInterest . '% of the amount in share account to issue a loan';
     }
 
     if ($interestRate <= 0) {
