@@ -33,6 +33,9 @@ WHERE fid = ? AND dtid = ?");
 $stmt->execute([$farmerId, $depositTypeId]);
 $deposits = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+$memberdetails = $pdo->query("SELECT *
+    FROM deposits WHERE id = (SELECT MAX(id) FROM deposits WHERE fid = $farmerId)")->fetchAll(PDO::FETCH_ASSOC);
+
 if (!$deposits || count($deposits) === 0) {
     header("Location: index.php?error=deposit not found");
     exit();
@@ -111,6 +114,26 @@ if (!$deposits || count($deposits) === 0) {
                                     <?php endif; ?>
                                     <dt class="col-sm-4 mb-4">Balance</dt>
                                     <dd class="col-sm-8 mb-4 fw-bold">Rs. <?php echo $balance['balance']; ?></dd>
+
+                                    <?php if (empty($memberdetails[0]['member1'])): ?>
+                                        <p class="text-muted"></p>
+                                    <?php else: ?>
+                                        <p class="fw-bold">Members</p>
+                                        <dt class="col-sm-4">Member 1:</dt>
+                                        <dd class="col-sm-8"><?php echo htmlspecialchars($memberdetails[0]['member1']); ?></dd>
+
+                                        <dt class="col-sm-4">Member 2:</dt>
+                                        <dd class="col-sm-8"><?php echo htmlspecialchars($memberdetails[0]['member2']); ?></dd>
+
+                                        <dt class="col-sm-4">Member 3:</dt>
+                                        <dd class="col-sm-8"><?php echo htmlspecialchars($memberdetails[0]['member3']); ?></dd>
+
+                                        <dt class="col-sm-4">Member 4:</dt>
+                                        <dd class="col-sm-8"><?php echo htmlspecialchars($memberdetails[0]['member4']); ?></dd>
+
+                                        <dt class="col-sm-4">Member 5:</dt>
+                                        <dd class="col-sm-8"><?php echo htmlspecialchars($memberdetails[0]['member5']); ?></dd>
+                                    <?php endif; ?>
                                 </dl>
                             </div>
                         </div>
