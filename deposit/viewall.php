@@ -71,7 +71,7 @@ $deposits = $pdo->query($query)->fetchAll(PDO::FETCH_ASSOC);
                             </div>
                         <?php else: ?>
                             <div class="mb-3">
-                                <input type="text" id="searchBox" class="form-control" placeholder="Search by Deposit Type, Farmer Name, or Farmer Code...">
+                                <input type="text" id="searchBox" class="form-control" placeholder="Search by Deposit Type, Farmer Name, balance or Farmer Code...">
                             </div>
                             <script>
                                 document.addEventListener('DOMContentLoaded', function() {
@@ -83,10 +83,12 @@ $deposits = $pdo->query($query)->fetchAll(PDO::FETCH_ASSOC);
                                             const depositType = row.cells[0].textContent.toLowerCase();
                                             const farmerName = row.cells[1].textContent.toLowerCase();
                                             const farmerCode = row.cells[2].textContent.toLowerCase();
+                                            const balance = row.cells[3].textContent.toLowerCase();
                                             if (
                                                 depositType.includes(filter) ||
                                                 farmerName.includes(filter) ||
-                                                farmerCode.includes(filter)
+                                                farmerCode.includes(filter) ||
+                                                balance.includes(filter)
                                             ) {
                                                 row.style.display = '';
                                             } else {

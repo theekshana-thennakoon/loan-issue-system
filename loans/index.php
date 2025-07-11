@@ -15,7 +15,7 @@ $offset = ($page - 1) * $perPage;
 $loans = $pdo->query("SELECT l.*, f.name AS farmer_name, f.id AS farmer_id, f.farmer_code AS farmer_code, lt.name AS loan_type_name, lt.interest AS loan_type_interest FROM loans l
           JOIN farmers f ON l.fid = f.id
           JOIN loantype lt ON l.ltid = lt.id
-          WHERE is_paid = 0")->fetchAll(PDO::FETCH_ASSOC);
+          ORDER BY l.id DESC")->fetchAll(PDO::FETCH_ASSOC);
 
 // Apply filters
 $params = [];
