@@ -5,7 +5,7 @@ require_once '../includes/auth.php';
 redirectIfNotLoggedIn();
 
 // Get all farmers
-$query = "SELECT * FROM farmers ORDER BY name LIMIT 10";
+$query = "SELECT * FROM farmers ORDER BY name";
 $users = $pdo->query($query)->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -123,13 +123,6 @@ $users = $pdo->query($query)->fetchAll(PDO::FETCH_ASSOC);
             <main class="col-lg-9 col-md-8 ms-sm-auto px-md-4">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2"><i class="bi bi-people"></i> Farmers / Organizations List</h1>
-                    <div class="btn-toolbar mb-2 mb-md-0">
-                        <?php if ($technical_officer_status == 'admin'): ?>
-                            <a href="create.php" class="btn btn-primary">
-                                <i class="bi bi-plus-circle"></i> <span class="d-none d-sm-inline">Add Farmer / Organization</span>
-                            </a>
-                        <?php endif; ?>
-                    </div>
                 </div>
 
                 <?php if (isset($_GET['success'])): ?>
@@ -149,11 +142,6 @@ $users = $pdo->query($query)->fetchAll(PDO::FETCH_ASSOC);
                 <div class="card shadow-sm mb-4">
                     <div class="card-body">
                         <div class="table-responsive">
-                            <div class="mb-3">
-                                <a href="viewall.php" class="btn btn-secondary">
-                                    <i class="bi bi-list-ul"></i> View All farmers / Organizations
-                                </a>
-                            </div>
                             <table class="table table-hover">
                                 <thead class="table-light">
                                     <tr>
@@ -169,6 +157,32 @@ $users = $pdo->query($query)->fetchAll(PDO::FETCH_ASSOC);
                                             <td colspan="5" class="text-center py-4">No farmers found</td>
                                         </tr>
                                     <?php else: ?>
+                                        <div class="mb-3">
+                                            <input type="text" id="searchBox" class="form-control" placeholder="Search by Farmer Name, Address or Farmer Code / Organizatition Reg no...">
+                                        </div>
+                                        <script>
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                const searchBox = document.getElementById('searchBox');
+                                                const table = document.querySelector('.table tbody');
+                                                searchBox.addEventListener('input', function() {
+                                                    const filter = this.value.toLowerCase();
+                                                    Array.from(table.rows).forEach(row => {
+                                                        const farmerName = row.cells[0].textContent.toLowerCase();
+                                                        const farmerCode = row.cells[1].textContent.toLowerCase();
+                                                        const address = row.cells[2].textContent.toLowerCase();
+                                                        if (
+                                                            farmerName.includes(filter) ||
+                                                            farmerCode.includes(filter) ||
+                                                            address.includes(filter)
+                                                        ) {
+                                                            row.style.display = '';
+                                                        } else {
+                                                            row.style.display = 'none';
+                                                        }
+                                                    });
+                                                });
+                                            });
+                                        </script>
                                         <?php foreach ($users as $user): ?>
                                             <tr>
                                                 <td data-label="Name"><?php echo htmlspecialchars($user['name']); ?></td>

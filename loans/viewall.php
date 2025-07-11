@@ -15,7 +15,7 @@ $offset = ($page - 1) * $perPage;
 $loans = $pdo->query("SELECT l.*, f.name AS farmer_name, f.id AS farmer_id, f.farmer_code AS farmer_code, lt.name AS loan_type_name, lt.interest AS loan_type_interest FROM loans l
           JOIN farmers f ON l.fid = f.id
           JOIN loantype lt ON l.ltid = lt.id
-          ORDER BY l.id DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
+          ORDER BY l.id DESC")->fetchAll(PDO::FETCH_ASSOC);
 
 // Apply filters
 $params = [];
@@ -47,17 +47,6 @@ $countParams = [];
             <main class="col-lg-9 col-md-8 ms-sm-auto px-md-4">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2"><i class="bi bi-clipboard-check"></i> Issued Loans</h1>
-                    <div class="btn-toolbar mb-2 mb-md-0">
-                        <?php
-                        if ($technical_officer_status == 'admin' || $technical_officer_status == 'to') {
-                        ?>
-                            <a href="create.php" class="btn btn-primary">
-                                <i class="bi bi-plus-circle"></i> New Loan issuance
-                            </a>
-                        <?php
-                        }
-                        ?>
-                    </div>
                 </div>
 
                 <?php if (isset($_GET['success'])): ?>
@@ -77,17 +66,42 @@ $countParams = [];
                             </div>
                         <?php else: ?>
                             <div class="mb-3">
-                                <a href="viewall.php" class="btn btn-secondary">
-                                    <i class="bi bi-list-ul"></i> View all issued loans
-                                </a>
+                                <input type="text" id="searchBox" class="form-control" placeholder="Search by Loan Type, Farmer Name / Organization , Farmer Code / Organization reg no , Issued date or Amount...">
                             </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const searchBox = document.getElementById('searchBox');
+                                    const table = document.querySelector('.table tbody');
+                                    searchBox.addEventListener('input', function() {
+                                        const filter = this.value.toLowerCase();
+                                        Array.from(table.rows).forEach(row => {
+                                            const loanType = row.cells[0].textContent.toLowerCase();
+                                            const farmerName = row.cells[1].textContent.toLowerCase();
+                                            const farmerCode = row.cells[2].textContent.toLowerCase();
+                                            const issueDate = row.cells[3].textContent.toLowerCase();
+                                            const amount = row.cells[4].textContent.toLowerCase();
+                                            if (
+                                                loanType.includes(filter) ||
+                                                farmerName.includes(filter) ||
+                                                farmerCode.includes(filter) ||
+                                                issueDate.includes(filter) ||
+                                                amount.includes(filter)
+                                            ) {
+                                                row.style.display = '';
+                                            } else {
+                                                row.style.display = 'none';
+                                            }
+                                        });
+                                    });
+                                });
+                            </script>
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Loan type</th>
-                                            <th>Farmer name</th>
-                                            <th>Farmer code</th>
+                                            <th>Farmer / Organization</th>
+                                            <th>Farmer code / Org Reg No</th>
                                             <th>Issued date</th>
                                             <th>Amount</th>
                                             <th>Repayment</th>
@@ -96,6 +110,7 @@ $countParams = [];
                                     </thead>
                                     <tbody>
                                         <?php foreach ($loans as $loan): ?>
+
                                             <tr>
                                                 <td><?php echo htmlspecialchars($loan['loan_type_name']); ?></td>
                                                 <td><?php echo htmlspecialchars($loan['farmer_name']); ?></td>

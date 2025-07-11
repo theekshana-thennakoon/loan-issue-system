@@ -101,7 +101,15 @@ if (!$deposits || count($deposits) === 0) {
                                     <dt class="col-sm-4 mb-4">farmer_name</dt>
                                     <dd class="col-sm-8 mb-4"><?php echo htmlspecialchars($farmers['name'] ?? 'N/A'); ?></dd>
                                     <?php if ($depositTypeId == 6): ?>
-                                        <?php foreach ($deposits as $deposit): ?>
+                                        <dt class="col-sm-4 mb-4">Child Name</dt>
+                                        <dd class="col-sm-8 mb-4">
+                                            <?php echo htmlspecialchars($deposits[0]['childname'] ?? 'N/A'); ?>
+                                        </dd>
+                                        <dt class="col-sm-4 mb-4">Date of Birth</dt>
+                                        <dd class="col-sm-8 mb-4">
+                                            <?php echo htmlspecialchars($deposits[0]['dob'] ?? 'N/A'); ?>
+                                        </dd>
+                                        <!-- <?php foreach ($deposits as $deposit): ?>
                                             <dt class="col-sm-4 mb-4">Child Name</dt>
                                             <dd class="col-sm-8 mb-4">
                                                 <?php echo htmlspecialchars($deposit['childname'] ?? 'N/A'); ?>
@@ -110,7 +118,7 @@ if (!$deposits || count($deposits) === 0) {
                                             <dd class="col-sm-8 mb-4">
                                                 <?php echo htmlspecialchars($deposit['dob'] ?? 'N/A'); ?>
                                             </dd>
-                                        <?php endforeach; ?>
+                                        <?php endforeach; ?> -->
                                     <?php endif; ?>
                                     <dt class="col-sm-4 mb-4">Balance</dt>
                                     <dd class="col-sm-8 mb-4 fw-bold">Rs. <?php echo $balance['balance']; ?></dd>
@@ -171,7 +179,7 @@ if (!$deposits || count($deposits) === 0) {
                                                             } elseif ($deposit['dorw'] == 'w') {
                                                                 echo '<button class="btn btn-sm btn-danger">Withdrawal</button>';
                                                             } else {
-                                                                echo '<button class="btn btn-sm btn-secondary">Unknown</button>';
+                                                                echo '<button class="btn btn-sm btn-secondary">$deposit[\'dorw\']</button>';
                                                             }
                                                             ?>
                                                         </td>
