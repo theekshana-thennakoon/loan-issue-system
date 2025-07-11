@@ -9,27 +9,26 @@ if (!isset($_GET['id'])) {
     exit();
 }
 
-$issuanceId = $_GET['id'];
+$loanId = $_GET['id'];
 
-// Verify issuance exists
-$stmt = $pdo->prepare("SELECT id FROM issuances WHERE id = ?");
-$stmt->execute([$issuanceId]);
+// Verify loan exists
+$stmt = $pdo->prepare("SELECT id FROM loans WHERE id = ?");
+$stmt->execute([$loanId]);
 if (!$stmt->fetch()) {
-    header("Location: index.php?error=Issuance not found");
+    header("Location: index.php?error=Loan not found");
     exit();
 }
 
 // Get issued items that haven't been fully returned
-$items = $pdo->prepare("
-    SELECT ii.id, ii.item_id, ii.quantity, ii.returned_quantity,
-           i.name as item_name, i.description as item_description
-    FROM issuance_items ii
-    JOIN items i ON ii.item_id = i.id
-    WHERE ii.issuance_id = ? 
-    AND (ii.returned_quantity IS NULL OR ii.returned_quantity < ii.quantity)
+$stmt = $pdo->prepare("
+    SELECT l.*, f.name as farmer_name, lt.name as loan_type_name, lt.interest as loan_type_interest
+    FROM loans l
+    JOIN farmers f ON l.fid = f.id
+    JOIN loantype lt ON l.ltid = lt.id
+    WHERE l.id = ?
 ");
-$items->execute([$issuanceId]);
-$items = $items->fetchAll(PDO::FETCH_ASSOC);
+$stmt->execute([$loanId]);
+$loan = $stmt->fetch(PDO::FETCH_ASSOC);
 // print_r($items);
 $errors = [];
 $returnDate = date('Y-m-d');
@@ -37,79 +36,42 @@ $returnConditions = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $returnDate = $_POST['return_date'];
-    $returnConditions = $_POST['return_condition'] ?? [];
-    $returnQuantities = $_POST['return_quantity'] ?? [];
+    $return_amount = $_POST['return_amount'];
 
     // Validation
-    if (empty($returnQuantities)) {
-        $errors['items'] = 'Please specify quantities for at least one item';
-    } else {
-        foreach ($returnQuantities as $issuanceItemId => $quantity) {
-            // if ($quantity <= 0) {
-            //     $errors['items'] = 'Return quantity must be greater than 0';
-            //     break;
-            // }
-
-            // Find the original issuance item
-            $originalItem = null;
-            foreach ($items as $item) {
-                if ($item['id'] == $issuanceItemId) {
-                    $originalItem = $item;
-                    break;
-                }
-            }
-
-            if (!$originalItem) {
-                $errors['items'] = 'Invalid item selected for return';
-                break;
-            }
-
-            $maxReturnable = $originalItem['quantity'] - ($originalItem['returned_quantity'] ?? 0);
-            if ($quantity > $maxReturnable) {
-                $errors['items'] = 'Return quantity cannot exceed issued quantity';
-                break;
-            }
-        }
+    if (empty($return_amount)) {
+        $errors['items'] = 'Please fill in the return amounts';
     }
 
     if (empty($errors)) {
         try {
-            $pdo->beginTransaction();
+            if ($return_amount > 0) {
 
-            foreach ($returnQuantities as $issuanceItemId => $quantity) {
-                if ($quantity > 0) {
-                    $condition = $returnConditions[$issuanceItemId] ?? 'good';
-
-                    // Update issuance item
-                    $stmt = $pdo->prepare("
-                        UPDATE issuance_items 
-                        SET returned_quantity = IFNULL(returned_quantity, 0) + ?,
-                            return_date = ?,
-                            return_condition = ?
-                        WHERE id = ?
+                // Update issuance item
+                $stmt = $pdo->prepare("
+                        INSERT INTO repayments 
+                        (lid, date, amount)
+                        VALUES (?, ?, ?)
                     ");
-                    $stmt->execute([
-                        $quantity,
-                        $returnDate,
-                        $condition,
-                        $issuanceItemId
-                    ]);
-
-                    // Update inventory
-                    $stmt = $pdo->prepare("
-                        UPDATE items 
-                        SET quantity = quantity + ? 
-                        WHERE id = (
-                            SELECT item_id FROM issuance_items WHERE id = ?
-                        )
-                    ");
-                    $stmt->execute([$quantity, $issuanceItemId]);
-                }
+                $stmt->execute([
+                    $loanId,
+                    $returnDate,
+                    $return_amount
+                ]);
             }
 
-            $pdo->commit();
 
-            header("Location: view.php?id=$issuanceId&success=Item returns recorded successfully");
+            $stmt = $pdo->prepare("SELECT SUM(amount) AS total_repaid FROM repayments WHERE lid = ?");
+            $stmt->execute([$loanId]);
+            $sum_repayments = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($sum_repayments['total_repaid'] >= $loan['need_to_pay']) {
+                // Mark loan as paid
+                $stmt = $pdo->prepare("UPDATE loans SET is_paid = 1 WHERE id = ?");
+                $stmt->execute([$loanId]);
+            }
+
+            header("Location: view.php?id=$loanId&success=Repayment recorded successfully");
             exit();
         } catch (PDOException $e) {
             $pdo->rollBack();
@@ -125,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Record Returns - FOT Media Inventory</title>
+    <title>Add Repayments</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="../../assets/css/style.css" rel="stylesheet">
@@ -143,11 +105,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <main class="col-lg-9 col-md-8 ms-sm-auto px-md-4">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2">
-                        <i class="bi bi-box-arrow-in-down"></i> Record Returns for Issuance #<?php echo $issuanceId; ?>
+                        <i class="bi bi-box-arrow-in-down"></i> Add Repayments for Loan
                     </h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
-                        <a href="view.php?id=<?php echo $issuanceId; ?>" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left"></i> Back to Issuance
+                        <a href="view.php?id=<?php echo $loanId; ?>" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Loan
                         </a>
                     </div>
                 </div>
@@ -174,67 +136,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             value="<?php echo htmlspecialchars($returnDate); ?>" required readonly>
                                     </div>
                                 </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <?php if ($loan['is_paid']): ?>
+                                            <div class="alert alert-info">
+                                                All items from this loan have already been returned.
+                                            </div>
+                                        <?php else: ?>
+                                            <?php if (isset($errors['items'])): ?>
+                                                <div class="alert alert-danger"><?php echo $errors['items']; ?></div>
+                                            <?php endif; ?>
 
-                                <div class="col-12">
-                                    <h5 class="mb-3">Items to Return</h5>
-                                    <?php if (empty($items)): ?>
-                                        <div class="alert alert-info">
-                                            All items from this issuance have already been returned.
-                                        </div>
-                                    <?php else: ?>
-                                        <?php if (isset($errors['items'])): ?>
-                                            <div class="alert alert-danger"><?php echo $errors['items']; ?></div>
+                                            <div class="table-responsive">
+                                                <label for="">Amount</label>
+                                                <input type="text" class="form-control" name="return_amount" required>
+                                            </div>
                                         <?php endif; ?>
-
-                                        <div class="table-responsive">
-                                            <table class="table table-sm">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th>Item</th>
-                                                        <th>Issued Qty</th>
-                                                        <th>Already Returned</th>
-                                                        <th>Return Qty *</th>
-                                                        <th>Condition</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <?php foreach ($items as $item): ?>
-                                                        <tr>
-                                                            <td>
-                                                                <strong><?php echo htmlspecialchars($item['item_name']); ?></strong>
-                                                                <?php if ($item['item_description']): ?>
-                                                                    <br><small class="text-muted"><?php echo htmlspecialchars($item['item_description']); ?></small>
-                                                                <?php endif; ?>
-                                                            </td>
-                                                            <td><?php echo $item['quantity']; ?></td>
-                                                            <td><?php echo $item['returned_quantity'] ?? '0'; ?></td>
-                                                            <td>
-                                                                <input type="number"
-                                                                    name="return_quantity[<?php echo $item['id']; ?>]"
-                                                                    class="form-control"
-                                                                    max="<?php echo $item['quantity'] - ($item['returned_quantity'] ?? 0); ?>"
-                                                                    value="<?php echo $item['quantity'] - ($item['returned_quantity'] ?? 0); ?>">
-                                                            </td>
-                                                            <td>
-                                                                <select class="form-select"
-                                                                    name="return_condition[<?php echo $item['id']; ?>]">
-                                                                    <option value="good">Good</option>
-                                                                    <option value="damaged">Damaged</option>
-                                                                    <option value="lost">Lost</option>
-                                                                </select>
-                                                            </td>
-                                                        </tr>
-                                                    <?php endforeach; ?>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    <?php endif; ?>
+                                    </div>
                                 </div>
 
                                 <div class="col-12 mt-4">
-                                    <?php if (!empty($items)): ?>
+                                    <?php if (!$loan['is_paid']): ?>
                                         <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-check-circle"></i> Record Returns
+                                            <i class="bi bi-check-circle"></i> Add Repayments
                                         </button>
                                     <?php endif; ?>
                                     <a href="view.php?id=<?php echo $issuanceId; ?>" class="btn btn-outline-secondary">

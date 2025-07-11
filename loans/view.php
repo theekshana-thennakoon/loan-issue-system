@@ -116,6 +116,9 @@ if (!$loan) {
                                     <dt class="col-sm-4">Interest Rate</dt>
                                     <dd class="col-sm-8"><?php echo htmlspecialchars($loan['loan_type_interest']); ?>%</dd>
 
+                                    <dt class="col-sm-4">Need to pay</dt>
+                                    <dd class="col-sm-8">Rs. <?php echo htmlspecialchars($loan['need_to_pay']); ?></dd>
+
                                     <dt class="col-sm-4">Status</dt>
                                     <dd class="col-sm-8">
                                         <?php
@@ -151,9 +154,20 @@ if (!$loan) {
                                                     <td>
                                                         <strong><?php echo htmlspecialchars($item['date']); ?></strong>
                                                     </td>
-                                                    <td><?php echo htmlspecialchars($item['amount']); ?></td>
+                                                    <td>Rs. <?php echo htmlspecialchars($item['amount']); ?></td>
                                                 </tr>
                                             <?php endforeach; ?>
+
+                                            <tr>
+                                                <?php
+                                                $stmt = $pdo->prepare("SELECT SUM(amount) AS total_repaid FROM repayments WHERE lid = ?");
+                                                $stmt->execute([$loanId]);
+                                                $sum_repayments = $stmt->fetch(PDO::FETCH_ASSOC);
+                                                $balance = $loan['need_to_pay'] - $sum_repayments['total_repaid'];
+                                                ?>
+                                                <th>Balance</th>
+                                                <th>Rs. <?php echo htmlspecialchars($balance); ?></th>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
