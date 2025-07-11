@@ -39,7 +39,7 @@ $technical_officer_status = $_SESSION["technical_officer_status"];
             ?>
 
                 <a href="./users/" class="list-group-item list-group-item-action">
-                    <i class="bi bi-box-seam me-2"></i> Farmers List
+                    <i class="bi bi-box-seam me-2"></i> Farmers / Organizations List
                 </a>
             <?php
             }

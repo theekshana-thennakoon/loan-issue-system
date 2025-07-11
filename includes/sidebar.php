@@ -38,7 +38,7 @@ $technical_officer_status = $_SESSION["technical_officer_status"];
             if ($technical_officer_status == 'admin' || $technical_officer_status == 'to') {
             ?>
                 <a href="../users/" class="list-group-item list-group-item-action">
-                    <i class="bi bi-people me-2"></i> Farmers List
+                    <i class="bi bi-people me-2"></i> Farmers / Organizations List
                 </a>
             <?php
             }

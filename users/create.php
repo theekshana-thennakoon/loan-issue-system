@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Farmer</title>
+    <title>Add Farmer / Organization</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="../../assets/css/style.css" rel="stylesheet">
@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <main class="col-lg-9 col-md-8 ms-sm-auto px-md-4">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2"><i class="bi bi-person-plus"></i> Add New Farmer</h1>
+                    <h1 class="h2"><i class="bi bi-person-plus"></i> Add New Farmer / Organization</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
                         <a href="index.php" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Back to Farmers List
@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="farmer_code" class="form-label">Farmer code *</label>
+                                        <label for="farmer_code" class="form-label">Farmer code / Organization Registration No *</label>
                                         <input type="text" class="form-control <?php echo isset($errors['farmer_code']) ? 'is-invalid' : ''; ?>"
                                             id="farmer_code" name="farmer_code" required>
                                         <?php if (isset($errors['farmer_code'])): ?>
@@ -149,7 +149,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <?php if (isset($errors['phone'])): ?>
                                             <div class="invalid-feedback"><?php echo $errors['phone']; ?></div>
                                         <?php endif; ?>
-                                        <small class="text-muted">Minimum 8 characters</small>
                                     </div>
                                 </div>
 

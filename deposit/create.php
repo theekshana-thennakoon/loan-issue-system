@@ -41,7 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
         try {
-
             $query = "SELECT * FROM deposits WHERE fid=? and dtid=?";
             $stmt = $pdo->prepare($query);
             $stmt->execute([$farmer, $deposit_type]);
@@ -67,7 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $balance = $amount;
             }
 
-            if ($deposit_type == 6) {
+            // Handle different deposit types
+            if ($deposit_type == 6) { // Peramaga
                 $child_name = trim($_POST['child_name']);
                 $child_dob = trim($_POST['child_dob']);
 
@@ -83,14 +83,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception("Validation errors occurred.");
                 }
 
-                // Insert into peramaga table
                 $stmt = $pdo->prepare("INSERT INTO deposits (fid, dtid, amount, dorw, balance, childname, dob, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->execute([$farmer, $deposit_type, $amount, $deposit_or_withdraw, $balance, $child_name, $child_dob, $transaction_date]);
+            } elseif ($deposit_type == 7) { // Small Group Organization (assuming ID 7)
+                $member1 = trim($_POST['member1']);
+                $member2 = trim($_POST['member2']);
+                $member3 = trim($_POST['member3']);
+
+                $member1nic = trim($_POST['member1_nic']);
+                $member2nic = trim($_POST['member2_nic']);
+                $member3nic = trim($_POST['member3_nic']);
+
+                if (empty($member1) || empty($member2) || empty($member3)) {
+                    $errors['members'] = "All group members are required.";
+                }
+
+                if (!empty($errors)) {
+                    throw new Exception("Validation errors occurred.");
+                }
+
+                if (empty($member1nic) || empty($member2nic) || empty($member3nic)) {
+                    $errors['members_nic'] = "All group members NICs are required.";
+                }
+
+                $stmt = $pdo->prepare("INSERT INTO deposits (fid, dtid, amount, dorw, balance, member1, member2, member3, member1nic, member2nic, member3nic, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$farmer, $deposit_type, $amount, $deposit_or_withdraw, $balance, $member1, $member2, $member3, $member1nic, $member2nic, $member3nic, $transaction_date]);
             } else {
                 $stmt = $pdo->prepare("INSERT INTO deposits (fid, dtid, amount, dorw, balance, date) VALUES (?, ?, ?, ?, ?, ?)");
                 $stmt->execute([$farmer, $deposit_type, $amount, $deposit_or_withdraw, $balance, $transaction_date]);
             }
-
 
             if ($deposit_or_withdraw == 'd') {
                 header("Location: index.php?success=Deposit successfully");
@@ -111,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deposit Types </title>
+    <title>Deposit Types</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="../../assets/css/style.css" rel="stylesheet">
@@ -164,9 +185,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
 
                                 <div class="col">
-                                    <label for="name" class="form-label">Select Farmer *</label>
+                                    <label for="name" class="form-label">Select Farmer / Organization *</label>
                                     <select name="farmer" id="farmer" class="form-select">
-                                        <option value="">-- Select Farmer --</option>
+                                        <option value="">-- Select Farmer / Organization --</option>
                                         <?php foreach ($farmers_list as $farmer): ?>
                                             <option value="<?php echo $farmer['id']; ?>"><?php echo htmlspecialchars($farmer['name']) . " (" . htmlspecialchars($farmer['farmer_code']) . ")"; ?></option>
                                         <?php endforeach; ?>
@@ -178,7 +199,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div id="peramaga-fields" class="row mb-3" style="display: none;">
-
                                 <div class="col">
                                     <label for="child_name" class="form-label">Child Name *</label>
                                     <input type="text" class="form-control" id="child_name" name="child_name">
@@ -188,29 +208,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="date" class="form-control" id="child_dob" name="child_dob">
                                 </div>
                             </div>
-                            <script>
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    const depositTypeSelect = document.getElementById('deposit_type');
-                                    const peramagaFields = document.getElementById('peramaga-fields');
-                                    // Find the peramaga id
-                                    let peramagaId = '';
-                                    <?php foreach ($deposittypes as $deposittype): ?>
-                                        <?php if (strtolower($deposittype['name']) === 'peramaga'): ?>
-                                            peramagaId = '<?php echo $deposittype['id']; ?>';
-                                        <?php endif; ?>
-                                    <?php endforeach; ?>
 
-                                    function togglePeramagaFields() {
-                                        if (depositTypeSelect.value === peramagaId) {
-                                            peramagaFields.style.display = '';
-                                        } else {
-                                            peramagaFields.style.display = 'none';
-                                        }
-                                    }
-                                    depositTypeSelect.addEventListener('change', togglePeramagaFields);
-                                    togglePeramagaFields();
-                                });
-                            </script>
+                            <div id="small-group-fields" class="row mb-3" style="display: none;">
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <label for="member1" class="form-label">Member 1 *</label>
+                                        <input type="text" class="form-control" id="member1" name="member1">
+                                    </div>
+                                    <div class="col mb-3">
+                                        <label for="member1_nic" class="form-label">Member 1 NIC *</label>
+                                        <input type="text" class="form-control" id="member1_nic" name="member1_nic">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <label for="member2" class="form-label">Member 2 *</label>
+                                        <input type="text" class="form-control" id="member2" name="member2">
+                                    </div>
+                                    <div class="col">
+                                        <label for="member2_nic" class="form-label">Member 2 NIC *</label>
+                                        <input type="text" class="form-control" id="member2_nic" name="member2_nic">
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <label for="member3" class="form-label">Member 3 *</label>
+                                        <input type="text" class="form-control" id="member3" name="member3">
+                                    </div>
+                                    <div class="col">
+                                        <label for="member3_nic" class="form-label">Member 3 NIC *</label>
+                                        <input type="text" class="form-control" id="member3_nic" name="member3_nic">
+                                    </div>
+                                </div>
+
+                            </div>
+
 
                             <div class="row mb-3">
                                 <div class="col">
@@ -227,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <select name="deposit_or_withdraw" id="deposit_or_withdraw" class="form-select">
                                         <option value="">-- Select Deposit or Withdraw --</option>
                                         <option value="d">Deposit</option>
-                                        <option value="witwhdraw">Withdraw</option>
+                                        <option value="w">Withdraw</option>
                                     </select>
                                 </div>
 
@@ -240,7 +273,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <?php endif; ?>
                                 </div>
                             </div>
-
 
                             <div class="mt-4">
                                 <button type="submit" class="btn btn-primary">
@@ -258,6 +290,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const depositTypeSelect = document.getElementById('deposit_type');
+            const peramagaFields = document.getElementById('peramaga-fields');
+            const smallGroupFields = document.getElementById('small-group-fields');
+
+            // Find the peramaga and small group ids
+            let peramagaId = '';
+            let smallGroupId = '';
+
+            <?php foreach ($deposittypes as $deposittype): ?>
+                <?php if (strtolower($deposittype['name']) === 'peramaga'): ?>
+                    peramagaId = '<?php echo $deposittype['id']; ?>';
+                <?php endif; ?>
+                <?php if (strtolower($deposittype['name']) === 'small group organization'): ?>
+                    smallGroupId = '<?php echo $deposittype['id']; ?>';
+                <?php endif; ?>
+            <?php endforeach; ?>
+
+            function toggleSpecialFields() {
+                if (depositTypeSelect.value === peramagaId) {
+                    peramagaFields.style.display = 'flex';
+                    smallGroupFields.style.display = 'none';
+                } else if (depositTypeSelect.value === smallGroupId) {
+                    peramagaFields.style.display = 'none';
+                    smallGroupFields.style.display = 'flex';
+                } else {
+                    peramagaFields.style.display = 'none';
+                    smallGroupFields.style.display = 'none';
+                }
+            }
+
+            depositTypeSelect.addEventListener('change', toggleSpecialFields);
+            toggleSpecialFields(); // Initialize on page load
+        });
+    </script>
 </body>
 
 </html>
