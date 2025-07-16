@@ -21,6 +21,69 @@ JOIN deposittypes dt ON d1.dtid = dt.id
 JOIN farmers f ON d1.fid = f.id
 ORDER BY d1.id DESC LIMIT 10";
 $deposits = $pdo->query($query)->fetchAll(PDO::FETCH_ASSOC);
+
+
+
+$today = date("m-d");
+$year = date("Y");
+if ($today == '03-31') {
+    // Reset balances on New Year's Day
+    // Get least balance of every user grouped by deposit type in the first 3 months of the current year
+    $startDate = "$year-01-01";
+    $endDate = "$year-03-31";
+    $leastBalancesQuery = "
+        SELECT fid, dtid, MIN(balance) as least_balance
+        FROM deposits
+        WHERE date >= :startDate AND date <= :endDate
+        GROUP BY fid, dtid
+    ";
+    $stmt = $pdo->prepare($leastBalancesQuery);
+    $stmt->execute([':startDate' => $startDate, ':endDate' => $endDate]);
+    $leastBalances = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($leastBalances as $row) {
+        // Get interest rate for this deposit type
+        $dtid = $row['dtid'];
+        $fid = $row['fid'];
+        $least_balance = $row['least_balance'];
+
+        $interestStmt = $pdo->prepare("SELECT interest FROM deposittypes WHERE id = :dtid");
+        $interestStmt->execute([':dtid' => $dtid]);
+        $interestRow = $interestStmt->fetch(PDO::FETCH_ASSOC);
+
+        $interest = $interestRow ? $interestRow['interest'] : 0;
+
+        $interest = ($interest / 100) / 4;
+        // Convert percentage to decimal
+
+
+        $last_balanceStmt = $pdo->prepare("SELECT balance FROM deposits WHERE id = (
+            SELECT MAX(id) FROM deposits WHERE fid = :fid AND dtid = :dtid
+        )");
+        $last_balanceStmt->execute([':fid' => $fid, ':dtid' => $dtid]);
+        $last_balanceRow = $last_balanceStmt->fetch(PDO::FETCH_ASSOC);
+
+        $last_balance = $last_balanceRow ? $last_balanceRow['balance'] : 0;
+
+
+        $insert_interest = "INSERT INTO deposits (fid, dtid, amount, drow, date, balance)
+         VALUES (:fid, :dtid, :amount, :drow, :date, :balance)";
+        $insertStmt = $pdo->prepare($insert_interest);
+        $insertStmt->execute([
+            ':fid' => $fid,
+            ':dtid' => $dtid,
+            ':amount' => $interest,
+            ':drow' => 'interest',
+            ':date' => date('Y-m-d'),
+            ':balance' => $last_balance + $interest
+        ]);
+        // You can now use $interest for further calculations
+        // Example: $interestAmount = $least_balance * $interest;
+    }
+}
+
+
+
 ?>
 
 <!DOCTYPE html>
