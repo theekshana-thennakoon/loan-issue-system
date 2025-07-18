@@ -47,7 +47,7 @@ $technical_officer_status = $_SESSION["technical_officer_status"];
             <a href="./issuances/" class="list-group-item list-group-item-action">
                 <i class="bi bi-clipboard-check me-2"></i> Loans
             </a>
-            <a href="./reports.php" class="list-group-item list-group-item-action">
+            <a href="./reports" class="list-group-item list-group-item-action">
                 <i class="bi bi-graph-up me-2"></i> Reports
             </a>
         </div>

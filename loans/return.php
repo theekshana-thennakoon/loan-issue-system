@@ -67,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($sum_repayments['total_repaid'] >= $loan['need_to_pay']) {
                 // Mark loan as paid
+                
                 $stmt = $pdo->prepare("UPDATE loans SET is_paid = 1 WHERE id = ?");
                 $stmt->execute([$loanId]);
             }
